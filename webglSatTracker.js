@@ -104,6 +104,22 @@ var satelliteTracker = {
 
 
 
+//=== COLOR PICKER ==============================================================================================================
+
+var colorPicker = {
+    colors: ["red", "orange", "yellow", "lime", "cyan", "fuchsia"],
+    actualColorIndex: 0,
+//-------------------------------------------------------------------------------------------------------------------------------
+    getActualColor: function() {
+        return colorPicker.colors[colorPicker.actualColorIndex];
+    },
+    changeActualColor: function() {
+        colorPicker.actualColorIndex = (colorPicker.actualColorIndex + 1) % colorPicker.colors.length;
+    }
+}
+
+
+
 //=== SCENE MANAGER =============================================================================================================
 
 var sceneManager = {
@@ -143,15 +159,16 @@ var sceneManager = {
     },
     makeTextSprite: function(text) {
         var canvas = document.createElement("canvas");
-        canvas.width = canvas.height = 100;
+        canvas.width = 200;
+        canvas.height = 100;
         var context = canvas.getContext("2d");
         context.font = "bold 14px Courier";
-        context.fillStyle = "#00ffff";
-        context.fillText(text, 50 - 0.5 * context.measureText(text).width, 30);
+        context.fillStyle = colorPicker.getActualColor();
+        context.fillText(text, 100 - 0.5 * context.measureText(text).width, 30);
         var tex = new THREE.Texture(canvas);
         tex.needsUpdate = true;
         var sprite = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, useScreenCoordinates: false}));
-        sprite.scale.set(30, 30, 0);
+        sprite.scale.set(30, 15, 0);
         return sprite;
     },
 //-------------------------------------------------------------------------------------------------------------------------------
@@ -182,7 +199,7 @@ var sceneManager = {
         });
     },
     addSatellite: function(name, keplerParams) {
-        var sat = new THREE.Mesh(new THREE.SphereGeometry(2, 16, 16), new THREE.MeshBasicMaterial({color: 0x00ffff}));
+        var sat = new THREE.Mesh(new THREE.SphereGeometry(2, 16, 16), new THREE.MeshBasicMaterial({color: colorPicker.getActualColor()}));
         sceneManager.scene.add(sat);
         var label = sceneManager.makeTextSprite(name);
         sceneManager.scene.add(label);
@@ -190,7 +207,7 @@ var sceneManager = {
             return satelliteTracker.getSatellitePosition(keplerParams, 0);
         };
         for (var i = 1; i < 60; i++) {
-            var orb = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 8), new THREE.MeshBasicMaterial({color: Math.round(255 - (i / 60 * 255)) * 0x101}));
+            var orb = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 8), new THREE.MeshBasicMaterial({color: colorPicker.getActualColor()}));
             sceneManager.scene.add(orb);
             orb.geoPosition = (function(timeOffset) {
                var t = timeOffset;
@@ -199,6 +216,7 @@ var sceneManager = {
                };
             })(-i / (60 * keplerParams.meanMotion));
         }
+        colorPicker.changeActualColor();
     }
 };
 
@@ -252,16 +270,16 @@ var model = {
     },
     tleParser: {
         checkTle: function(row) {
-        	if (row.length != 69)
-        		return 0;
-        	var checksum = 0;
-        	for (var i = 0; i < 68; i++) {
-        		if (row.charAt(i) == '-')
-        			checksum++;
-        		if (row.charAt(i) >= '0' && row.charAt(i) <= '9')
-        			checksum += row.charAt(i) - '0';
-        	}
-        	return checksum % 10 == row.charAt(68) - '0';
+            if (row.length != 69)
+                return 0;
+            var checksum = 0;
+            for (var i = 0; i < 68; i++) {
+                if (row.charAt(i) == '-')
+                    checksum++;
+                if (row.charAt(i) >= '0' && row.charAt(i) <= '9')
+                    checksum += row.charAt(i) - '0';
+            }
+            return checksum % 10 == row.charAt(68) - '0';
         },
         getSemimajorAxis: function(meanMotion) {
             var GM = 398600441800000;
@@ -301,14 +319,14 @@ var model = {
         model.currentTime = new Date(model.initialTime.getTime() + (new Date().getTime() - model.initialTime.getTime()) * model.timeFactor);
         sceneManager.update(model.currentTime);
         sphericalCamera.update();
-    	model.renderer.render(sceneManager.scene, sphericalCamera.camera);
+        model.renderer.render(sceneManager.scene, sphericalCamera.camera);
     },
     addSatellite: function(tle) {
         var keplerParams = model.tleParser.getKeplerParams(tle);
         if (!keplerParams) {
-    		alert("Incorrect TLE");
-    		return;
-    	}
+            alert("Incorrect TLE");
+            return;
+        }
         sceneManager.addSatellite(tle[0], keplerParams);
     }
 };
@@ -327,48 +345,48 @@ function MeshDayNightMaterial() {
         uniforms: uniforms,
         vertexShader: THREE.ShaderLib['phong'].vertexShader,
         fragmentShader: [
-    		"uniform vec3 diffuse;",
-    		"uniform float opacity;",
-    		"uniform vec3 ambient;",
-    		"uniform vec3 emissive;",
-    		"uniform vec3 specular;",
-    		"uniform float shininess;",
-    		THREE.ShaderChunk["color_pars_fragment"],
-    		THREE.ShaderChunk["map_pars_fragment"],
+            "uniform vec3 diffuse;",
+            "uniform float opacity;",
+            "uniform vec3 ambient;",
+            "uniform vec3 emissive;",
+            "uniform vec3 specular;",
+            "uniform float shininess;",
+            THREE.ShaderChunk["color_pars_fragment"],
+            THREE.ShaderChunk["map_pars_fragment"],
             "uniform sampler2D nightMap;",
-    		THREE.ShaderChunk["lightmap_pars_fragment"],
-    		THREE.ShaderChunk["envmap_pars_fragment"],
-    		THREE.ShaderChunk["fog_pars_fragment"],
-    		THREE.ShaderChunk["lights_phong_pars_fragment"],
-    		THREE.ShaderChunk["shadowmap_pars_fragment"],
-    		THREE.ShaderChunk["bumpmap_pars_fragment"],
-    		THREE.ShaderChunk["normalmap_pars_fragment"],
-    		THREE.ShaderChunk["specularmap_pars_fragment"],
-    		"void main() {",
-    			"gl_FragColor = vec4(vec3(1.0), opacity);",
+            THREE.ShaderChunk["lightmap_pars_fragment"],
+            THREE.ShaderChunk["envmap_pars_fragment"],
+            THREE.ShaderChunk["fog_pars_fragment"],
+            THREE.ShaderChunk["lights_phong_pars_fragment"],
+            THREE.ShaderChunk["shadowmap_pars_fragment"],
+            THREE.ShaderChunk["bumpmap_pars_fragment"],
+            THREE.ShaderChunk["normalmap_pars_fragment"],
+            THREE.ShaderChunk["specularmap_pars_fragment"],
+            "void main() {",
+                "gl_FragColor = vec4(vec3(1.0), opacity);",
                 "vec3 dayColor = texture2D(map, vUv).rgb;",
-    			"vec3 nightColor = texture2D(nightMap, vUv).rgb;",
+                "vec3 nightColor = texture2D(nightMap, vUv).rgb;",
                 "vec4 lDirection = viewMatrix * vec4(directionalLightDirection[0], 0.0);",
-    			"float cosineAngleSunToNormal = dot(normalize(vNormal), normalize(lDirection.xyz));",
-    			"cosineAngleSunToNormal = clamp(cosineAngleSunToNormal * 8.0, -1.0, 1.0);",
-    			"float mixAmount = cosineAngleSunToNormal * 0.5 + 0.5;",
-    			"vec3 resColor = mix(nightColor, dayColor, mixAmount);",
-    			"vec4 texelColor = vec4(resColor, 1.0);",
-    			"#ifdef GAMMA_INPUT",
-    				"texelColor.xyz *= texelColor.xyz;",
-    			"#endif",
-    			"gl_FragColor = gl_FragColor * texelColor;",
-    			THREE.ShaderChunk["alphatest_fragment"],
-    			THREE.ShaderChunk["specularmap_fragment"],
-    			THREE.ShaderChunk["lights_phong_fragment"],
-    			THREE.ShaderChunk["lightmap_fragment"],
-    			THREE.ShaderChunk["color_fragment"],
-    			THREE.ShaderChunk["envmap_fragment"],
-    			THREE.ShaderChunk["shadowmap_fragment"],
-    			THREE.ShaderChunk["linear_to_gamma_fragment"],
-    			THREE.ShaderChunk["fog_fragment"],
-    		"}"
-    	].join("\n"),
+                "float cosineAngleSunToNormal = dot(normalize(vNormal), normalize(lDirection.xyz));",
+                "cosineAngleSunToNormal = clamp(cosineAngleSunToNormal * 8.0, -1.0, 1.0);",
+                "float mixAmount = cosineAngleSunToNormal * 0.5 + 0.5;",
+                "vec3 resColor = mix(nightColor, dayColor, mixAmount);",
+                "vec4 texelColor = vec4(resColor, 1.0);",
+                "#ifdef GAMMA_INPUT",
+                    "texelColor.xyz *= texelColor.xyz;",
+                "#endif",
+                "gl_FragColor = gl_FragColor * texelColor;",
+                THREE.ShaderChunk["alphatest_fragment"],
+                THREE.ShaderChunk["specularmap_fragment"],
+                THREE.ShaderChunk["lights_phong_fragment"],
+                THREE.ShaderChunk["lightmap_fragment"],
+                THREE.ShaderChunk["color_fragment"],
+                THREE.ShaderChunk["envmap_fragment"],
+                THREE.ShaderChunk["shadowmap_fragment"],
+                THREE.ShaderChunk["linear_to_gamma_fragment"],
+                THREE.ShaderChunk["fog_fragment"],
+            "}"
+        ].join("\n"),
         lights: true
     });
     material.map = material.bumpMap = material.specularMap = true;
@@ -376,37 +394,37 @@ function MeshDayNightMaterial() {
 }
 
 function MeshGlowMaterial() {
-	return new THREE.ShaderMaterial({
-		uniforms: {
-			coeficient: {type: "f", value: 0.75},
-			power: {type: "f", value: 4.5},
-			glowColor: {type: "c", value: new THREE.Color(0x99ccff)},
-		},
-		vertexShader: [
-    		"varying vec3 vVertexWorldPosition;",
-    		"varying vec3 vVertexNormal;",
-    		"void main() {",
-        		"vVertexNormal = normalize(normalMatrix * normal);",
-        		"vVertexWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;",
-        		"gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);",
-    		"}",
-		].join('\n'),
-		fragmentShader: [
-    		"uniform vec3 glowColor;",
-    		"uniform float coeficient;",
-    		"uniform float power;",
-    		"varying vec3 vVertexNormal;",
-    		"varying vec3 vVertexWorldPosition;",
-    		"void main() {",
-        		"vec3 worldCameraToVertex = vVertexWorldPosition - cameraPosition;",
-        		"vec3 viewCameraToVertex = (viewMatrix * vec4(worldCameraToVertex, 0.0)).xyz;",
-        		"viewCameraToVertex = normalize(viewCameraToVertex);",
-        		"float intensity = pow(coeficient + dot(vVertexNormal, viewCameraToVertex), power);",
-        		"gl_FragColor = vec4(glowColor, intensity);",
-    		"}",
-    	].join('\n'),
-		transparent: true,
-		depthWrite: false
-	});
+    return new THREE.ShaderMaterial({
+        uniforms: {
+            coeficient: {type: "f", value: 0.75},
+            power: {type: "f", value: 4.5},
+            glowColor: {type: "c", value: new THREE.Color(0x99ccff)},
+        },
+        vertexShader: [
+            "varying vec3 vVertexWorldPosition;",
+            "varying vec3 vVertexNormal;",
+            "void main() {",
+                "vVertexNormal = normalize(normalMatrix * normal);",
+                "vVertexWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;",
+                "gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);",
+            "}",
+        ].join('\n'),
+        fragmentShader: [
+            "uniform vec3 glowColor;",
+            "uniform float coeficient;",
+            "uniform float power;",
+            "varying vec3 vVertexNormal;",
+            "varying vec3 vVertexWorldPosition;",
+            "void main() {",
+                "vec3 worldCameraToVertex = vVertexWorldPosition - cameraPosition;",
+                "vec3 viewCameraToVertex = (viewMatrix * vec4(worldCameraToVertex, 0.0)).xyz;",
+                "viewCameraToVertex = normalize(viewCameraToVertex);",
+                "float intensity = pow(coeficient + dot(vVertexNormal, viewCameraToVertex), power);",
+                "gl_FragColor = vec4(glowColor, intensity);",
+            "}",
+        ].join('\n'),
+        transparent: true,
+        depthWrite: false
+    });
 }
 
