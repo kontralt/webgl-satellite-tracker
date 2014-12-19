@@ -16,7 +16,7 @@ var sphericalCamera = {
         sphericalCamera.distance = Math.max(150, Math.min(sphericalCamera.distance, 1000));
         sphericalCamera.azimuth %= 360;
         sphericalCamera.zenith = Math.max(0.001, Math.min(sphericalCamera.zenith, 180));
-        sphericalCamera.camera.position = new THREE.Vector3(
+        sphericalCamera.camera.position.set(
             Math.cos(sphericalCamera.azimuth / 180 * Math.PI) * Math.sin(sphericalCamera.zenith / 180 * Math.PI) * sphericalCamera.distance,
             Math.cos(sphericalCamera.zenith / 180 * Math.PI) * sphericalCamera.distance,
             Math.sin(sphericalCamera.azimuth / 180 * Math.PI) * Math.sin(sphericalCamera.zenith / 180 * Math.PI) * sphericalCamera.distance
@@ -139,9 +139,9 @@ var sceneManager = {
         var cX = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial({color: 0xff0000}));
         var cY = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial({color: 0x00ff00}));
         var cZ = new THREE.Mesh(new THREE.CubeGeometry(5, 5, 5), new THREE.MeshBasicMaterial({color: 0x0000ff}));
-        cX.position = new THREE.Vector3(100, 0, 0);
-        cY.position = new THREE.Vector3(0, 100, 0);
-        cZ.position = new THREE.Vector3(0, 0, 100);
+        cX.position.set(100, 0, 0);
+        cY.position.set(0, 100, 0);
+        cZ.position.set(0, 0, 100);
         sceneManager.scene.add(cX);
         sceneManager.scene.add(cY);
         sceneManager.scene.add(cZ);
@@ -195,7 +195,7 @@ var sceneManager = {
         geoCoordTranslator.update(currentTime);
         sceneManager.scene.children.forEach(function(value) {
             if (value.hasOwnProperty("geoPosition"))
-                value.position = geoCoordTranslator.g2c(value.geoPosition());
+                value.position.copy(geoCoordTranslator.g2c(value.geoPosition()));
         });
     },
     addSatellite: function(name, keplerParams) {
