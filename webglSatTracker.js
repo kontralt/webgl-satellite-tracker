@@ -225,7 +225,7 @@ var sceneManager = {
 //=== 3D MODEL ==================================================================================================================
 
 var model = {
-    renderer: new THREE.WebGLRenderer(),
+    renderer: new THREE.WebGLRenderer({preserveDrawingBuffer: true}),
     initialTime: new Date(),
     currentTime: new Date(),
     timeFactor: 1,
