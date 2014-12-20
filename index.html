@@ -1,16 +1,51 @@
 ﻿<html>
-	<head>        
+    <head>
         <script src="https://rawgithub.com/mrdoob/three.js/master/build/three.js"></script>
-        <script src="webglSatTracker.js"></script>
-	</head>
-    <body>	
-		<script>
-            model.init(window.innerWidth - 20, window.innerHeight - 20, 1200, document.body);
-            model.addSatellite(["ISS", "1 25544U 98067A   14071.87839299  .00024109  00000-0  40778-3 0  8565", "2 25544  51.6467 216.9461 0002750 244.4271 234.0307 15.51441917876387"]);
-            model.addSatellite(["NOAA-19", "1 33591U 09005A   14069.48013314  .00000384  00000-0  23552-3 0  1547", "2 33591 098.9362 014.8636 0014727 041.9178 066.3990 14.11658774262062"]);
-            model.addSatellite(["AIST-2", "1 39133U 13015D   14070.18956706  .00003697  00000-0  30473-3 0  9178", "2 39133 064.8765 091.1373 0022957 323.2480 036.7033 15.00383356 48860"]);
-            model.addSatellite(["Vanguard 1", "1 00005U 58002B   14070.09206611  .00000028  00000-0  47475-4 0  2014", "2 00005 034.2455 082.0422 1849568 128.2971 249.8895 10.84391036956649"]);        
-            model.addSatellite(["Horizons 2", "1 32388U 07063B   14068.97310316 -.00000203  00000-0  10000-3 0  1968", "2 32388 000.0094 233.4746 0002851 109.1197 260.1175 01.00271715 22934"]);
-        </script>		
+        <script src="https://rawgithub.com/kontralt/webgl-satellite-tracker/master/webglSatTracker.js"></script>
+        <script src="satelliteTable.js"></script>
+        <script src="tle.js"></script>
+        <style type="text/css">
+            body, a {
+                background-color: black;
+                color: white;
+            }
+            table {
+                margin: auto;
+                border-collapse: collapse;
+            }
+            table tr td {
+                border: 1px solid white;
+                padding: 5px;
+                text-align: center;
+            }
+            table tr td:nth-child(1n+2) {
+                width: 100px;
+            }
+        </style>
+    </head>
+    <body>
+        <span id="modelHolder">
+            Speed:
+            <a href="javascript:setSpeed(0);">0x</a>,
+            <a href="javascript:setSpeed(1);">1x</a>,
+            <a href="javascript:setSpeed(10);">10x</a>,
+            <a href="javascript:setSpeed(60);">60x</a>,
+            <a href="javascript:setSpeed(100);">100x</a>,
+            <a href="javascript:setSpeed(600);">600x</a>,
+            <a href="javascript:setSpeed(1000);">1000x</a>,
+            <a href="javascript:setSpeed(3600);">3600x</a>
+        </span>
+        <script>
+            function setSpeed(s) {
+                model.timeFactor = s;
+            }
+            model.init(window.innerWidth - 20, (window.innerHeight - 20) * 0.7, 1, document.getElementById("modelHolder"));
+            satelliteTable.init(document.body);
+            for (var i = 0; i < 6; i++) {
+                var randomTleIndex = Math.floor(Math.random() * tle.length);
+                satelliteTable.addSatellite(tle[randomTleIndex], colorPicker.getActualColor());
+                model.addSatellite(tle[randomTleIndex]);
+            }
+        </script>
     </body>
 </html>
